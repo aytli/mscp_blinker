@@ -11,6 +11,7 @@
 #FUSES NOIESO
 #FUSES NOFCMEN
 #FUSES NOPROTECT
+#FUSES CANC
 
 #use delay(clock = 20000000)
 
@@ -36,7 +37,6 @@
 typedef enum
 {
     IDLE,
-    CHECK_SWITCHES,
     BLINK,
     N_STATES
 } blinker_state_t;

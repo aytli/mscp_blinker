@@ -23,7 +23,6 @@ void isr_timer2(void)
     {
         ms = 0;
         gb_blink = true;
-        output_toggle(LED_PIN);
     }
     else
     {
@@ -85,14 +84,25 @@ void isr_canrx1()
 
 void idle_state(void)
 {
-}
-
-void check_switches_state(void)
-{
+    if (gb_blink == true)
+    {
+        g_state = BLINK;
+    }
+    else
+    {
+        g_state = IDLE;
+    }
 }
 
 void blink_state(void)
 {
+    gb_blink = false;
+    output_toggle(LED_PIN);
+    
+    (gb_left_sig == true)  ? output_toggle(LEFT_OUT_PIN)  : output_low(LEFT_OUT_PIN);
+    (gb_right_sig == true) ? output_toggle(RIGHT_OUT_PIN) : output_low(RIGHT_OUT_PIN);
+    
+    g_state = IDLE;
 }
 
 void main()
@@ -118,9 +128,6 @@ void main()
         {
             case IDLE:
                 idle_state();
-                break;
-            case CHECK_SWITCHES:
-                check_switches_state();
                 break;
             case BLINK:
                 blink_state();
