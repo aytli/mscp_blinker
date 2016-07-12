@@ -38,6 +38,7 @@ typedef enum
 {
     IDLE,
     BLINK,
+    CHECK_SWITCHES,
     BPS_TRIP,
     N_STATES
 } blinker_state_t;

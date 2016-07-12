@@ -155,113 +155,10 @@ void idle_state(void)
         return;
     }
     
-    // Check the regen brake switch
-    if ((input_state(REGEN_IN_PIN) == 1) && (gb_regen_sig == false))
-    {
-        DEBOUNCE;
-        if (input_state(REGEN_IN_PIN) == 1)
-        {
-            // If the regen switch was turned on, set the regen flag
-            gb_regen_sig = true;
-        }
-    }
-    else if ((input_state(REGEN_IN_PIN) == 0) && (gb_regen_sig == true))
-    {
-        DEBOUNCE;
-        if (input_state(REGEN_IN_PIN) == 0)
-        {
-            // If the regen switch was turned off, clear the regen flag
-            gb_regen_sig = false;
-        }
-    }
-    
-    // Check the mechanical brake switch
-    if ((input_state(MECH_IN_PIN) == 1) && (gb_mech_sig == false))
-    {
-        DEBOUNCE;
-        if (input_state(MECH_IN_PIN) == 1)
-        {
-            // If the mechanical switch was turned on, set the regen flag
-            gb_mech_sig = true;
-        }
-    }
-    else if ((input_state(MECH_IN_PIN) == 0) && (gb_mech_sig == true))
-    {
-        DEBOUNCE;
-        if (input_state(MECH_IN_PIN) == 0)
-        {
-            // If the mechanical switch was turned off, clear the regen flag
-            gb_mech_sig = false;
-        }
-    }
-    
     // Turn on the brake lights if either brake switch is on
     // Ternary statement
     // (Condition)                ? (Action if true)           : (Action if false)
     (gb_regen_sig || gb_mech_sig) ? output_high(BRAKE_OUT_PIN) : output_low(BRAKE_OUT_PIN);
-    
-    
-    // Check the left turn signal
-    if ((input_state(LEFT_IN_PIN) == 1) && (gb_left_sig == false))
-    {
-        DEBOUNCE;
-        if (input_state(LEFT_IN_PIN) == 1)
-        {
-            // If the mechanical switch was turned on, set the regen flag
-            gb_left_sig = true;
-            gb_right_sig = false;
-        }
-    }
-    else if ((input_state(LEFT_IN_PIN) == 0) && (gb_left_sig == true))
-    {
-        DEBOUNCE;
-        if (input_state(LEFT_IN_PIN) == 0)
-        {
-            // If the mechanical switch was turned off, clear the regen flag
-            gb_left_sig = false;
-        }
-    }
-    
-    // Check the right turn signal
-    if ((input_state(RIGHT_IN_PIN) == 1) && (gb_right_sig == false))
-    {
-        DEBOUNCE;
-        if (input_state(RIGHT_IN_PIN) == 1)
-        {
-            // If the mechanical switch was turned on, set the regen flag
-            gb_right_sig = true;
-            gb_left_sig = false;
-        }
-    }
-    else if ((input_state(RIGHT_IN_PIN) == 0) && (gb_right_sig == true))
-    {
-        DEBOUNCE;
-        if (input_state(RIGHT_IN_PIN) == 0)
-        {
-            // If the mechanical switch was turned off, clear the regen flag
-            gb_right_sig = false;
-        }
-    }
-    
-    // Check the hazard switch
-    if ((input_state(HAZARD_IN_PIN) == 1) && (gb_hazard_sig == false))
-    {
-        DEBOUNCE;
-        if (input_state(HAZARD_IN_PIN) == 1)
-        {
-            // If the mechanical switch was turned on, set the regen flag
-            gb_hazard_sig = true;
-        }
-    }
-    else if ((input_state(HAZARD_IN_PIN) == 0) && (gb_hazard_sig == true))
-    {
-        DEBOUNCE;
-        if (input_state(HAZARD_IN_PIN) == 0)
-        {
-            // If the mechanical switch was turned off, clear the regen flag
-            gb_hazard_sig = false;
-        }
-    }
     
     if (gb_blink == true)
     {
@@ -296,6 +193,104 @@ void blink_state(void)
     }
     
     // Return to the idle state
+    g_state = IDLE;
+}
+
+void check_switches_state(void)
+{
+    // Check the regen brake switch
+    if ((input_state(REGEN_IN_PIN) == 1) && (gb_regen_sig == false))
+    {
+        DEBOUNCE;
+        if (input_state(REGEN_IN_PIN) == 1)
+        {
+            gb_regen_sig = true;
+        }
+    }
+    else if ((input_state(REGEN_IN_PIN) == 0) && (gb_regen_sig == true))
+    {
+        DEBOUNCE;
+        if (input_state(REGEN_IN_PIN) == 0)
+        {
+            gb_regen_sig = false;
+        }
+    }
+    
+    // Check the mechanical brake switch
+    if ((input_state(MECH_IN_PIN) == 1) && (gb_mech_sig == false))
+    {
+        DEBOUNCE;
+        if (input_state(MECH_IN_PIN) == 1)
+        {
+            gb_mech_sig = true;
+        }
+    }
+    else if ((input_state(MECH_IN_PIN) == 0) && (gb_mech_sig == true))
+    {
+        DEBOUNCE;
+        if (input_state(MECH_IN_PIN) == 0)
+        {
+            gb_mech_sig = false;
+        }
+    }
+    
+    // Check the left turn signal
+    if ((input_state(LEFT_IN_PIN) == 1) && (gb_left_sig == false))
+    {
+        DEBOUNCE;
+        if (input_state(LEFT_IN_PIN) == 1)
+        {
+            gb_left_sig = true;
+            gb_right_sig = false; // Clear the right flag
+        }
+    }
+    else if ((input_state(LEFT_IN_PIN) == 0) && (gb_left_sig == true))
+    {
+        DEBOUNCE;
+        if (input_state(LEFT_IN_PIN) == 0)
+        {
+            gb_left_sig = false;
+        }
+    }
+    
+    // Check the right turn signal
+    if ((input_state(RIGHT_IN_PIN) == 1) && (gb_right_sig == false))
+    {
+        DEBOUNCE;
+        if (input_state(RIGHT_IN_PIN) == 1)
+        {
+            gb_right_sig = true;
+            gb_left_sig = false; // Clear the left flag
+        }
+    }
+    else if ((input_state(RIGHT_IN_PIN) == 0) && (gb_right_sig == true))
+    {
+        DEBOUNCE;
+        if (input_state(RIGHT_IN_PIN) == 0)
+        {
+            gb_right_sig = false;
+        }
+    }
+    
+    // Check the hazard switch
+    if ((input_state(HAZARD_IN_PIN) == 1) && (gb_hazard_sig == false))
+    {
+        DEBOUNCE;
+        if (input_state(HAZARD_IN_PIN) == 1)
+        {
+            gb_hazard_sig = true;
+        }
+    }
+    else if ((input_state(HAZARD_IN_PIN) == 0) && (gb_hazard_sig == true))
+    {
+        DEBOUNCE;
+        if (input_state(HAZARD_IN_PIN) == 0)
+        {
+            gb_hazard_sig = false;
+        }
+    }
+    
+    // Return to idle
     g_state = IDLE;
 }
 
@@ -344,6 +339,9 @@ void main()
                 break;
             case BLINK:
                 blink_state();
+                break;
+            case CHECK_SWITCHES:
+                check_switches_state();
                 break;
             case BPS_TRIP:
                 bps_trip_state();
