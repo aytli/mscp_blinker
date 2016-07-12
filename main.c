@@ -25,6 +25,16 @@ static int1            gb_regen_sig;
 static int1            gb_mech_sig;
 static int1            gb_strobe_sig;
 
+void blinker_init(void)
+{
+    gb_left_sig   = false;
+    gb_right_sig  = false;
+    gb_hazard_sig = false;
+    gb_regen_sig  = false;
+    gb_mech_sig   = false;
+    gb_strobe_sig = false;
+}
+
 #int_timer2
 void isr_timer2(void)
 {
@@ -129,7 +139,7 @@ void idle_state(void)
     if ((input_state(REGEN_IN_PIN) == 1) && (gb_regen_sig == false))
     {
         DEBOUNCE;
-        if (input_state(REGEN_IN_PIN == 1))
+        if (input_state(REGEN_IN_PIN) == 1)
         {
             // If the regen switch was turned on, set the regen flag
             gb_regen_sig = true;
@@ -138,7 +148,7 @@ void idle_state(void)
     else if ((input_state(REGEN_IN_PIN) == 0) && (gb_regen_sig == true))
     {
         DEBOUNCE;
-        if (input_state(REGEN_IN_PIN == 0))
+        if (input_state(REGEN_IN_PIN) == 0)
         {
             // If the regen switch was turned off, clear the regen flag
             gb_regen_sig = false;
@@ -149,7 +159,7 @@ void idle_state(void)
     if ((input_state(MECH_IN_PIN) == 1) && (gb_mech_sig == false))
     {
         DEBOUNCE;
-        if (input_state(MECH_IN_PIN == 1))
+        if (input_state(MECH_IN_PIN) == 1)
         {
             // If the mechanical switch was turned on, set the regen flag
             gb_mech_sig = true;
@@ -158,7 +168,7 @@ void idle_state(void)
     else if ((input_state(MECH_IN_PIN) == 0) && (gb_mech_sig == true))
     {
         DEBOUNCE;
-        if (input_state(MECH_IN_PIN == 0))
+        if (input_state(MECH_IN_PIN) == 0)
         {
             // If the mechanical switch was turned off, clear the regen flag
             gb_mech_sig = false;
@@ -166,7 +176,7 @@ void idle_state(void)
     }
     
     // Turn on the brake lights if either brake switch is on
-    if ((gb_regen_sig | gb_mech_sig) == true)
+    if ((gb_regen_sig == true) || (gb_mech_sig == true))
     {
         output_high(BRAKE_OUT_PIN);
     }
@@ -182,7 +192,7 @@ void idle_state(void)
     }
     else
     {
-        // Return to idle
+        // Continue idling
         g_state = IDLE;
     }
 }
@@ -210,6 +220,7 @@ void blink_state(void)
         (gb_right_sig == true) ? output_toggle(RIGHT_OUT_PIN) : output_low(RIGHT_OUT_PIN);
     }
     
+    // Return to the idle state
     g_state = IDLE;
 }
 
@@ -244,6 +255,7 @@ void main()
     enable_interrupts(INT_TIMER2);
     enable_interrupts(GLOBAL);
     
+    blinker_init();
     can_init();
     
     g_state = IDLE;
