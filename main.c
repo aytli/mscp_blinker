@@ -61,6 +61,12 @@ void isr_canrx0()
                 break;
             case COMMAND_HAZARD_SIGNAL_ID:
                 gb_hazard_sig = !gb_hazard_sig;
+                if (gb_hazard_sig == true)
+                {
+                    // If the hazard signal is turned on, reset the turn signals
+                    output_low(LEFT_OUT_PIN);
+                    output_low(RIGHT_OUT_PIN);
+                }
                 break;
             case COMMAND_BPS_TRIP_SIGNAL_ID:
                 gb_strobe_sig = true;
@@ -93,6 +99,12 @@ void isr_canrx1()
                 break;
             case COMMAND_HAZARD_SIGNAL_ID:
                 gb_hazard_sig = !gb_hazard_sig;
+                if (gb_hazard_sig == true)
+                {
+                    // If the hazard signal is turned on, reset the turn signals
+                    output_low(LEFT_OUT_PIN);
+                    output_low(RIGHT_OUT_PIN);
+                }
                 break;
             case COMMAND_BPS_TRIP_SIGNAL_ID:
                 gb_strobe_sig = true;
