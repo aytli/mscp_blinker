@@ -197,7 +197,7 @@ void idle_state(void)
     
     // Turn on the brake lights if either brake switch is on
     // Ternary statement
-    // (Condition) ? (Action if true) : (Action if false)
+    // (Condition)                ? (Action if true)           : (Action if false)
     (gb_regen_sig || gb_mech_sig) ? output_high(BRAKE_OUT_PIN) : output_low(BRAKE_OUT_PIN);
     
     
@@ -290,7 +290,7 @@ void blink_state(void)
         // Hazard lights are not active, blink turn signals if needed
         
         // Ternary statements
-        // (Condition) ? (Action if true) : (Action if false)
+        // (Condition)         ? (Action if true)             : (Action if false)
         (gb_left_sig == true)  ? output_toggle(LEFT_OUT_PIN)  : output_low(LEFT_OUT_PIN);
         (gb_right_sig == true) ? output_toggle(RIGHT_OUT_PIN) : output_low(RIGHT_OUT_PIN);
     }
