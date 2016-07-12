@@ -59,6 +59,9 @@ void isr_canrx0()
             case COMMAND_RIGHT_SIGNAL_ID:
                 gb_right_sig = !gb_right_sig;
                 break;
+            case COMMAND_HAZARD_SIGNAL_ID:
+                gb_hazard_sig = !gb_hazard_sig;
+                break;
             default:
                 break;
         }
