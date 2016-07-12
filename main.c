@@ -176,14 +176,9 @@ void idle_state(void)
     }
     
     // Turn on the brake lights if either brake switch is on
-    if ((gb_regen_sig == true) || (gb_mech_sig == true))
-    {
-        output_high(BRAKE_OUT_PIN);
-    }
-    else
-    {
-        output_low(BRAKE_OUT_PIN);
-    }
+    // Ternary statement
+    // (Condition) ? (Action if true) : (Action if false)
+    (gb_regen_sig || gb_mech_sig) ? output_high(BRAKE_OUT_PIN) : output_low(BRAKE_OUT_PIN);
     
     if (gb_blink == true)
     {
