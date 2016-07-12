@@ -2,7 +2,17 @@
 #include "can_telem.h"
 #include "can18F4580_mscp.c"
 
-#define BLINK_PERIOD_MS 200
+// Timing periods
+#define BLINK_PERIOD_MS    200
+#define DEBOUNCE_PERIOD_MS  10 // Hardware switch debounce period
+
+// Debounces a hardware pin
+#define DEBOUNCE                               \
+    int16 i;                                   \
+    for (i = 0 ; i < DEBOUNCE_PERIOD_MS ; i++) \
+    {                                          \
+        delay_ms(1);                           \
+    }
 
 static int1            gb_blink;
 static blinker_state_t g_state;
@@ -10,7 +20,6 @@ static blinker_state_t g_state;
 static int1            gb_left_sig;
 static int1            gb_right_sig;
 static int1            gb_hazard_sig;
-static int1            gb_headlight_sig;
 static int1            gb_regen_sig;
 static int1            gb_mech_sig;
 static int1            gb_strobe_sig;
@@ -76,6 +85,9 @@ void isr_canrx1()
             case COMMAND_RIGHT_SIGNAL_ID:
                 gb_right_sig = !gb_right_sig;
                 break;
+            case COMMAND_HAZARD_SIGNAL_ID:
+                gb_hazard_sig = !gb_hazard_sig;
+                break;
             default:
                 break;
         }
@@ -84,12 +96,64 @@ void isr_canrx1()
 
 void idle_state(void)
 {
+    // Check the regen brake switch
+    if ((input_state(REGEN_IN_PIN) == 1) && (gb_regen_sig == false))
+    {
+        DEBOUNCE;
+        if (input_state(REGEN_IN_PIN == 1))
+        {
+            // If the regen switch was turned on, set the regen flag
+            gb_regen_sig = true;
+        }
+    }
+    else if ((input_state(REGEN_IN_PIN) == 0) && (gb_regen_sig == true))
+    {
+        DEBOUNCE;
+        if (input_state(REGEN_IN_PIN == 0))
+        {
+            // If the regen switch was turned off, clear the regen flag
+            gb_regen_sig = false;
+        }
+    }
+    
+    // Check the mechanical brake switch
+    if ((input_state(MECH_IN_PIN) == 1) && (gb_mech_sig == false))
+    {
+        DEBOUNCE;
+        if (input_state(MECH_IN_PIN == 1))
+        {
+            // If the mechanical switch was turned on, set the regen flag
+            gb_mech_sig = true;
+        }
+    }
+    else if ((input_state(MECH_IN_PIN) == 0) && (gb_mech_sig == true))
+    {
+        DEBOUNCE;
+        if (input_state(MECH_IN_PIN == 0))
+        {
+            // If the mechanical switch was turned off, clear the regen flag
+            gb_mech_sig = false;
+        }
+    }
+    
+    // Turn on the brake lights if either brake switch is on
+    if ((gb_regen_sig | gb_mech_sig) == true)
+    {
+        output_high(BRAKE_OUT_PIN);
+    }
+    else
+    {
+        output_low(BRAKE_OUT_PIN);
+    }
+    
     if (gb_blink == true)
     {
+        // Time to blink
         g_state = BLINK;
     }
     else
     {
+        // Return to idle
         g_state = IDLE;
     }
 }
@@ -97,10 +161,25 @@ void idle_state(void)
 void blink_state(void)
 {
     gb_blink = false;
+    
+    // Blink heartbeat LED
     output_toggle(LED_PIN);
     
-    (gb_left_sig == true)  ? output_toggle(LEFT_OUT_PIN)  : output_low(LEFT_OUT_PIN);
-    (gb_right_sig == true) ? output_toggle(RIGHT_OUT_PIN) : output_low(RIGHT_OUT_PIN);
+    if (gb_hazard_sig == true)
+    {
+        // Hazard lights are active, blink both turn signals
+        output_toggle(LEFT_OUT_PIN);
+        output_toggle(RIGHT_OUT_PIN);
+    }
+    else
+    {
+        // Hazard lights are not active, blink turn signals if needed
+        
+        // Ternary statements
+        // (Condition) ? (Action if true) : (Action if false)
+        (gb_left_sig == true)  ? output_toggle(LEFT_OUT_PIN)  : output_low(LEFT_OUT_PIN);
+        (gb_right_sig == true) ? output_toggle(RIGHT_OUT_PIN) : output_low(RIGHT_OUT_PIN);
+    }
     
     g_state = IDLE;
 }
