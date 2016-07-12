@@ -3,8 +3,8 @@
 #include "can18F4580_mscp.c"
 
 // Timing periods
-#define BLINK_PERIOD_MS    200
-#define STROBE_PERIOD_MS   100
+#define BLINK_PERIOD_MS    500
+#define STROBE_PERIOD_MS    50
 #define DEBOUNCE_PERIOD_MS  10 // Hardware switch debounce period
 
 // Debounces a hardware pin
@@ -43,6 +43,9 @@ void isr_timer2(void)
     {
         ms = 0;
         gb_blink = true;
+        
+        // Blink heartbeat LED
+        output_toggle(LED_PIN);
     }
     else
     {
@@ -66,9 +69,17 @@ void isr_canrx0()
         {
             case COMMAND_LEFT_SIGNAL_ID:
                 gb_left_sig = !gb_left_sig;
+                if (gb_left_sig == true)
+                {
+                    gb_right_sig = false;
+                }
                 break;
             case COMMAND_RIGHT_SIGNAL_ID:
                 gb_right_sig = !gb_right_sig;
+                if (gb_right_sig == true)
+                {
+                    gb_left_sig = false;
+                }
                 break;
             case COMMAND_HAZARD_SIGNAL_ID:
                 gb_hazard_sig = !gb_hazard_sig;
@@ -128,6 +139,7 @@ void isr_canrx1()
 
 void idle_state(void)
 {
+    // Check the strobe signal
     if (gb_strobe_sig == true)
     {
         // The BPS has tripped, go immediately to the trip state
@@ -180,6 +192,69 @@ void idle_state(void)
     // (Condition) ? (Action if true) : (Action if false)
     (gb_regen_sig || gb_mech_sig) ? output_high(BRAKE_OUT_PIN) : output_low(BRAKE_OUT_PIN);
     
+    
+    // Check the left turn signal
+    if ((input_state(LEFT_IN_PIN) == 1) && (gb_left_sig == false))
+    {
+        DEBOUNCE;
+        if (input_state(LEFT_IN_PIN) == 1)
+        {
+            // If the mechanical switch was turned on, set the regen flag
+            gb_left_sig = true;
+            gb_right_sig = false;
+        }
+    }
+    else if ((input_state(LEFT_IN_PIN) == 0) && (gb_left_sig == true))
+    {
+        DEBOUNCE;
+        if (input_state(LEFT_IN_PIN) == 0)
+        {
+            // If the mechanical switch was turned off, clear the regen flag
+            gb_left_sig = false;
+        }
+    }
+    
+    // Check the right turn signal
+    if ((input_state(RIGHT_IN_PIN) == 1) && (gb_right_sig == false))
+    {
+        DEBOUNCE;
+        if (input_state(RIGHT_IN_PIN) == 1)
+        {
+            // If the mechanical switch was turned on, set the regen flag
+            gb_right_sig = true;
+            gb_left_sig = false;
+        }
+    }
+    else if ((input_state(RIGHT_IN_PIN) == 0) && (gb_right_sig == true))
+    {
+        DEBOUNCE;
+        if (input_state(RIGHT_IN_PIN) == 0)
+        {
+            // If the mechanical switch was turned off, clear the regen flag
+            gb_right_sig = false;
+        }
+    }
+    
+    // Check the hazard switch
+    if ((input_state(HAZARD_IN_PIN) == 1) && (gb_hazard_sig == false))
+    {
+        DEBOUNCE;
+        if (input_state(HAZARD_IN_PIN) == 1)
+        {
+            // If the mechanical switch was turned on, set the regen flag
+            gb_hazard_sig = true;
+        }
+    }
+    else if ((input_state(HAZARD_IN_PIN) == 0) && (gb_hazard_sig == true))
+    {
+        DEBOUNCE;
+        if (input_state(HAZARD_IN_PIN) == 0)
+        {
+            // If the mechanical switch was turned off, clear the regen flag
+            gb_hazard_sig = false;
+        }
+    }
+    
     if (gb_blink == true)
     {
         // Time to blink
@@ -195,9 +270,6 @@ void idle_state(void)
 void blink_state(void)
 {
     gb_blink = false;
-    
-    // Blink heartbeat LED
-    output_toggle(LED_PIN);
     
     if (gb_hazard_sig == true)
     {
