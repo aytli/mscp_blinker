@@ -115,9 +115,17 @@ void isr_canrx1()
         {
             case COMMAND_LEFT_SIGNAL_ID:
                 gb_left_sig = !gb_left_sig;
+                if (gb_left_sig == true)
+                {
+                    gb_right_sig = false;
+                }
                 break;
             case COMMAND_RIGHT_SIGNAL_ID:
                 gb_right_sig = !gb_right_sig;
+                if (gb_right_sig == true)
+                {
+                    gb_left_sig = false;
+                }
                 break;
             case COMMAND_HAZARD_SIGNAL_ID:
                 gb_hazard_sig = !gb_hazard_sig;
