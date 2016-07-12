@@ -23,8 +23,8 @@
 #define STROBE_OUT_PIN PIN_A5
 
 // SWITCH INPUTS
-#define RIGHT_IN_PIN   PIN_B0
-#define LEFT_IN_PIN    PIN_B1
+#define LEFT_IN_PIN    PIN_B0
+#define RIGHT_IN_PIN   PIN_B1
 #define HAZARD_IN_PIN  PIN_B2
 #define HEAD_IN_PIN    PIN_B3
 #define REGEN_IN_PIN   PIN_B4
