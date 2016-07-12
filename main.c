@@ -3,7 +3,7 @@
 #include "can18F4580_mscp.c"
 
 // Timing periods
-#define BLINK_PERIOD_MS    500
+#define BLINK_PERIOD_MS    100
 #define STROBE_PERIOD_MS    50
 #define DEBOUNCE_PERIOD_MS  10 // Hardware switch debounce period
 
@@ -15,24 +15,23 @@
         delay_ms(1);                           \
     }
 
-static int1            gb_blink;
-static blinker_state_t g_state;
-
 static int1            gb_left_sig;
 static int1            gb_right_sig;
 static int1            gb_hazard_sig;
 static int1            gb_regen_sig;
 static int1            gb_mech_sig;
 static int1            gb_strobe_sig;
+static int1            gb_blink;
+static blinker_state_t g_state;
 
 void blinker_init(void)
 {
-    gb_left_sig   = false;
-    gb_right_sig  = false;
-    gb_hazard_sig = false;
-    gb_regen_sig  = false;
-    gb_mech_sig   = false;
-    gb_strobe_sig = false;
+    gb_left_sig      = false;
+    gb_right_sig     = false;
+    gb_hazard_sig    = false;
+    gb_regen_sig     = false;
+    gb_mech_sig      = false;
+    gb_strobe_sig    = false;
 }
 
 #int_timer2
@@ -167,8 +166,8 @@ void idle_state(void)
     }
     else
     {
-        // Continue idling
-        g_state = IDLE;
+        // Check the switches if not blinking
+        g_state = CHECK_SWITCHES;
     }
 }
 
@@ -198,6 +197,10 @@ void blink_state(void)
 
 void check_switches_state(void)
 {
+    static int1 b_left_switch   = false;
+    static int1 b_right_switch  = false;
+    static int1 b_hazard_switch = false;
+    
     // Check the regen brake switch
     if ((input_state(REGEN_IN_PIN) == 1) && (gb_regen_sig == false))
     {
@@ -234,59 +237,69 @@ void check_switches_state(void)
         }
     }
     
+    // CAN BUS CONTROLLED LIGHTS
+    // The following switches are also controlled by CAN bus,
+    // need seperate flags to store the state of the hardware switch
+    
     // Check the left turn signal
-    if ((input_state(LEFT_IN_PIN) == 1) && (gb_left_sig == false))
+    if ((input_state(LEFT_IN_PIN) == 1) && (b_left_switch == false))
     {
         DEBOUNCE;
         if (input_state(LEFT_IN_PIN) == 1)
         {
-            gb_left_sig = true;
-            gb_right_sig = false; // Clear the right flag
+            b_left_switch = true;
+            gb_left_sig    = true;
+            gb_right_sig   = false; // Clear the right flag
         }
     }
-    else if ((input_state(LEFT_IN_PIN) == 0) && (gb_left_sig == true))
+    else if ((input_state(LEFT_IN_PIN) == 0) && (b_left_switch == true))
     {
         DEBOUNCE;
         if (input_state(LEFT_IN_PIN) == 0)
         {
-            gb_left_sig = false;
+            b_left_switch = false;
+            gb_left_sig    = false;
         }
     }
     
     // Check the right turn signal
-    if ((input_state(RIGHT_IN_PIN) == 1) && (gb_right_sig == false))
+    if ((input_state(RIGHT_IN_PIN) == 1) && (b_right_switch == false))
     {
         DEBOUNCE;
         if (input_state(RIGHT_IN_PIN) == 1)
         {
-            gb_right_sig = true;
-            gb_left_sig = false; // Clear the left flag
+            b_right_switch = true;
+            gb_right_sig    = true;
+            gb_left_sig     = false; // Clear the left flag
         }
     }
-    else if ((input_state(RIGHT_IN_PIN) == 0) && (gb_right_sig == true))
+    else if ((input_state(RIGHT_IN_PIN) == 0) && (b_right_switch == true))
     {
         DEBOUNCE;
         if (input_state(RIGHT_IN_PIN) == 0)
         {
-            gb_right_sig = false;
+            b_right_switch = false;
+            gb_right_sig    = false;
         }
     }
     
     // Check the hazard switch
-    if ((input_state(HAZARD_IN_PIN) == 1) && (gb_hazard_sig == false))
+    if ((input_state(HAZARD_IN_PIN) == 1) && (b_hazard_switch == false))
     {
         DEBOUNCE;
         if (input_state(HAZARD_IN_PIN) == 1)
         {
-            gb_hazard_sig = true;
+            b_hazard_switch = true;
+            gb_hazard_sig    = true;
         }
     }
-    else if ((input_state(HAZARD_IN_PIN) == 0) && (gb_hazard_sig == true))
+    else if ((input_state(HAZARD_IN_PIN) == 0) && (b_hazard_switch == true))
     {
         DEBOUNCE;
         if (input_state(HAZARD_IN_PIN) == 0)
         {
-            gb_hazard_sig = false;
+            b_hazard_switch = false;
+            gb_hazard_sig    = false;
         }
     }
     
