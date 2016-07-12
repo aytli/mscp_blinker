@@ -62,6 +62,9 @@ void isr_canrx0()
             case COMMAND_HAZARD_SIGNAL_ID:
                 gb_hazard_sig = !gb_hazard_sig;
                 break;
+            case COMMAND_BPS_TRIP_SIGNAL_ID:
+                gb_strobe_sig = true;
+                break;
             default:
                 break;
         }
@@ -91,6 +94,9 @@ void isr_canrx1()
             case COMMAND_HAZARD_SIGNAL_ID:
                 gb_hazard_sig = !gb_hazard_sig;
                 break;
+            case COMMAND_BPS_TRIP_SIGNAL_ID:
+                gb_strobe_sig = true;
+                break;
             default:
                 break;
         }
@@ -99,6 +105,13 @@ void isr_canrx1()
 
 void idle_state(void)
 {
+    if (gb_strobe_sig == true)
+    {
+        // The BPS has tripped, go immediately to the trip state
+        g_state = BPS_TRIP;
+        return;
+    }
+    
     // Check the regen brake switch
     if ((input_state(REGEN_IN_PIN) == 1) && (gb_regen_sig == false))
     {
@@ -187,6 +200,21 @@ void blink_state(void)
     g_state = IDLE;
 }
 
+void bps_trip_state(void)
+{
+    // Turn off all lights
+    output_low(LEFT_OUT_PIN);
+    output_low(RIGHT_OUT_PIN);
+    output_low(BRAKE_OUT_PIN);
+    
+    // Turn on the strobe light
+    output_high(STROBE_OUT_PIN);
+    
+    // The BPS has tripped, the blinker will fall into this state and will not
+    // exit until the car is restarted
+    g_state = BPS_TRIP; 
+}
+
 void main()
 {
     // Enable CAN receive interrupts
@@ -213,6 +241,9 @@ void main()
                 break;
             case BLINK:
                 blink_state();
+                break;
+            case BPS_TRIP:
+                bps_trip_state();
                 break;
             default:
                 break;
