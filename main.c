@@ -4,6 +4,7 @@
 
 // Timing periods
 #define BLINK_PERIOD_MS    200
+#define STROBE_PERIOD_MS   100
 #define DEBOUNCE_PERIOD_MS  10 // Hardware switch debounce period
 
 // Debounces a hardware pin
@@ -219,12 +220,15 @@ void bps_trip_state(void)
     output_low(RIGHT_OUT_PIN);
     output_low(BRAKE_OUT_PIN);
     
-    // Turn on the strobe light
-    output_high(STROBE_OUT_PIN);
+    // Pulse the strobe light
+    while(true)
+    {
+        output_toggle(STROBE_OUT_PIN);
+        delay_ms(STROBE_PERIOD_MS);
+    }
     
     // The BPS has tripped, the blinker will fall into this state and will not
     // exit until the car is restarted
-    g_state = BPS_TRIP; 
 }
 
 void main()
