@@ -3,7 +3,7 @@
 #include "can18F4580_mscp.c"
 
 // Timing periods
-#define BLINK_PERIOD_MS    100
+#define BLINK_PERIOD_MS    500
 #define STROBE_PERIOD_MS    50
 #define DEBOUNCE_PERIOD_MS  10 // Hardware switch debounce period
 
