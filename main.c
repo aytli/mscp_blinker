@@ -32,6 +32,12 @@ void blinker_init(void)
     gb_regen_sig     = false;
     gb_mech_sig      = false;
     gb_strobe_sig    = false;
+    
+    // Turn off all lights on startup
+    output_low(LEFT_OUT_PIN);
+    output_low(RIGHT_OUT_PIN);
+    output_low(BRAKE_OUT_PIN);
+    output_low(STROBE_OUT_PIN);
 }
 
 #int_timer2
@@ -91,6 +97,9 @@ void isr_canrx0()
                 break;
             case COMMAND_BPS_TRIP_SIGNAL_ID:
                 gb_strobe_sig = true;
+                break;
+            case COMMAND_PMS_BRAKE_LIGHT_ID:
+                output_toggle(BRAKE_OUT_PIN);
                 break;
             default:
                 break;
