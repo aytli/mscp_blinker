@@ -20,7 +20,7 @@ static int1            gb_right_sig;
 static int1            gb_hazard_sig;
 static int1            gb_regen_sig;
 static int1            gb_mech_sig;
-static int1            gb_strobe_sig;
+static int1            gb_bps_trip;
 static int1            gb_blink;
 static blinker_state_t g_state;
 
@@ -31,7 +31,7 @@ void blinker_init(void)
     gb_hazard_sig    = false;
     gb_regen_sig     = false;
     gb_mech_sig      = false;
-    gb_strobe_sig    = false;
+    gb_bps_trip    = false;
     
     // Turn off all lights on startup
     output_low(LEFT_OUT_PIN);
@@ -96,7 +96,7 @@ void isr_canrx0()
                 }
                 break;
             case COMMAND_BPS_TRIP_SIGNAL_ID:
-                gb_strobe_sig = true;
+                gb_bps_trip = true;
                 break;
             case COMMAND_PMS_BRAKE_LIGHT_ID:
                 gb_mech_sig = !gb_mech_sig;
@@ -145,7 +145,7 @@ void isr_canrx1()
                 }
                 break;
             case COMMAND_BPS_TRIP_SIGNAL_ID:
-                gb_strobe_sig = true;
+                gb_bps_trip = true;
                 break;
             case COMMAND_PMS_BRAKE_LIGHT_ID:
                 gb_mech_sig = !gb_mech_sig;
@@ -159,7 +159,7 @@ void isr_canrx1()
 void idle_state(void)
 {
     // Check the strobe signal
-    if (gb_strobe_sig == true)
+    if (gb_bps_trip == true)
     {
         // The BPS has tripped, go immediately to the trip state
         g_state = BPS_TRIP;
