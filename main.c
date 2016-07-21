@@ -99,7 +99,7 @@ void isr_canrx0()
                 gb_strobe_sig = true;
                 break;
             case COMMAND_PMS_BRAKE_LIGHT_ID:
-                output_toggle(BRAKE_OUT_PIN);
+                gb_mech_sig = !gb_mech_sig;
                 break;
             default:
                 break;
@@ -146,6 +146,9 @@ void isr_canrx1()
                 break;
             case COMMAND_BPS_TRIP_SIGNAL_ID:
                 gb_strobe_sig = true;
+                break;
+            case COMMAND_PMS_BRAKE_LIGHT_ID:
+                gb_mech_sig = !gb_mech_sig;
                 break;
             default:
                 break;
@@ -206,43 +209,49 @@ void blink_state(void)
 
 void check_switches_state(void)
 {
+    static int1 b_regen_switch  = false;
+    static int1 b_mech_switch   = false;
     static int1 b_left_switch   = false;
     static int1 b_right_switch  = false;
     static int1 b_hazard_switch = false;
     
     // Check the regen brake switch
-    if ((input_state(REGEN_IN_PIN) == 1) && (gb_regen_sig == false))
+    if ((input_state(REGEN_IN_PIN) == 1) && (b_regen_switch == false))
     {
         DEBOUNCE;
         if (input_state(REGEN_IN_PIN) == 1)
         {
+            b_regen_switch = true;
             gb_regen_sig = true;
         }
     }
-    else if ((input_state(REGEN_IN_PIN) == 0) && (gb_regen_sig == true))
+    else if ((input_state(REGEN_IN_PIN) == 0) && (b_regen_switch == true))
     {
         DEBOUNCE;
         if (input_state(REGEN_IN_PIN) == 0)
         {
+            b_regen_switch = false;
             gb_regen_sig = false;
         }
     }
     
     // Check the mechanical brake switch
-    if ((input_state(MECH_IN_PIN) == 1) && (gb_mech_sig == false))
+    if ((input_state(MECH_IN_PIN) == 1) && (b_mech_switch == false))
     {
         DEBOUNCE;
         if (input_state(MECH_IN_PIN) == 1)
         {
-            gb_mech_sig = true;
+            b_mech_switch = true;
+            gb_mech_sig   = true;
         }
     }
-    else if ((input_state(MECH_IN_PIN) == 0) && (gb_mech_sig == true))
+    else if ((input_state(MECH_IN_PIN) == 0) && (b_mech_switch == true))
     {
         DEBOUNCE;
         if (input_state(MECH_IN_PIN) == 0)
         {
-            gb_mech_sig = false;
+            b_mech_switch = false;
+            gb_mech_sig   = false;
         }
     }
     
