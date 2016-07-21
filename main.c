@@ -3,9 +3,14 @@
 #include "can18F4580_mscp.c"
 
 // Timing periods
-#define BLINK_PERIOD_MS    500
-#define STROBE_PERIOD_MS    50
-#define DEBOUNCE_PERIOD_MS  10 // Hardware switch debounce period
+#define BLINK_PERIOD_MS         500
+#define STROBE_PERIOD_MS         50
+#define DEBOUNCE_PERIOD_MS       10 // Hardware switch debounce period
+#define POWER_RESET_TIMEOUT_MS 2000 // Power reset timeout after a bps trip
+
+#define EEPROM_ADDRESS   0x00
+#define BPS_SUCCESS_FLAG 0x00
+#define BPS_TRIP_FLAG    0x01
 
 // Debounces a hardware pin
 #define DEBOUNCE                               \
@@ -97,6 +102,7 @@ void isr_canrx0()
                 break;
             case COMMAND_BPS_TRIP_SIGNAL_ID:
                 gb_bps_trip = true;
+                write_eeprom(EEPROM_ADDRESS,BPS_TRIP_FLAG);
                 break;
             case COMMAND_PMS_BRAKE_LIGHT_ID:
                 gb_mech_sig = !gb_mech_sig;
@@ -146,6 +152,7 @@ void isr_canrx1()
                 break;
             case COMMAND_BPS_TRIP_SIGNAL_ID:
                 gb_bps_trip = true;
+                write_eeprom(EEPROM_ADDRESS,BPS_TRIP_FLAG);
                 break;
             case COMMAND_PMS_BRAKE_LIGHT_ID:
                 gb_mech_sig = !gb_mech_sig;
@@ -327,6 +334,9 @@ void check_switches_state(void)
 
 void bps_trip_state(void)
 {
+    int16 counter = 0;
+    int1  b_erased = false;
+    
     // Turn off all lights
     output_low(LEFT_OUT_PIN);
     output_low(RIGHT_OUT_PIN);
@@ -337,6 +347,30 @@ void bps_trip_state(void)
     {
         output_toggle(STROBE_OUT_PIN);
         delay_ms(STROBE_PERIOD_MS);
+        
+        // Sometimes the blinker will reset itself when the bps trips. This is
+        // due to the relay not switching fast enough between 12V and AUX,
+        // causing the circuit to turn off and back on.
+        
+        // Once the strobe light has been blinking for a certain amount of time
+        // (eg. 2 seconds), it can be assumed that a reset did not occur, and
+        // the eeprom can be erased.
+        
+        // This will prevent the blinker from flashing the strobe lights if it
+        // is turned on after a trip event that did not cause the blinker to reset.
+        
+        if (b_erased == false)
+        {
+            if ((counter >= POWER_RESET_TIMEOUT_MS/STROBE_PERIOD_MS))
+            {
+                write_eeprom(EEPROM_ADDRESS,BPS_SUCCESS_FLAG); // Erase the eeprom
+                b_erased = true; // Only erase the eeprom once
+            }
+            else
+            {
+                counter++;
+            }
+        }
     }
     
     // The BPS has tripped, the blinker will fall into this state and will not
@@ -345,6 +379,9 @@ void bps_trip_state(void)
 
 void main()
 {
+    // Reset the eeprom memory
+    write_eeprom(EEPROM_ADDRESS,BPS_SUCCESS_FLAG);
+    
     // Enable CAN receive interrupts
     clear_interrupt(INT_CANRX0);
     enable_interrupts(INT_CANRX0);
@@ -359,7 +396,17 @@ void main()
     blinker_init();
     can_init();
     
-    g_state = IDLE;
+    // On startup, check if the blinker was reset due to a bps trip
+    if (read_eeprom(EEPROM_ADDRESS) == BPS_TRIP_FLAG)
+    {
+        // If the bps was tripped, start in the bps trip state
+        g_state = BPS_TRIP;
+    }
+    else
+    {
+        // The bps did not trip, this is a normal restart, start in idle as usual
+        g_state = IDLE;
+    }
     
     while(true)
     {
