@@ -79,26 +79,17 @@ void isr_canrx0()
         {
             case COMMAND_LEFT_SIGNAL_ID:
                 gb_left_sig = !gb_left_sig;
-                if (gb_left_sig == true)
-                {
-                    gb_right_sig = false;
-                }
+                gb_right_sig = false;
                 break;
             case COMMAND_RIGHT_SIGNAL_ID:
                 gb_right_sig = !gb_right_sig;
-                if (gb_right_sig == true)
-                {
-                    gb_left_sig = false;
-                }
+                gb_left_sig = false;
                 break;
             case COMMAND_HAZARD_SIGNAL_ID:
                 gb_hazard_sig = !gb_hazard_sig;
-                if (gb_hazard_sig == true)
-                {
-                    // If the hazard signal is turned on, reset the turn signals
-                    output_low(LEFT_OUT_PIN);
-                    output_low(RIGHT_OUT_PIN);
-                }
+                // If the hazard signal is turned on, reset the turn signals
+                output_low(LEFT_OUT_PIN);
+                output_low(RIGHT_OUT_PIN);
                 break;
             case COMMAND_BPS_TRIP_SIGNAL_ID:
                 gb_bps_trip = true;
@@ -129,26 +120,17 @@ void isr_canrx1()
         {
             case COMMAND_LEFT_SIGNAL_ID:
                 gb_left_sig = !gb_left_sig;
-                if (gb_left_sig == true)
-                {
-                    gb_right_sig = false;
-                }
+                gb_right_sig = false;
                 break;
             case COMMAND_RIGHT_SIGNAL_ID:
                 gb_right_sig = !gb_right_sig;
-                if (gb_right_sig == true)
-                {
-                    gb_left_sig = false;
-                }
+                gb_left_sig = false;
                 break;
             case COMMAND_HAZARD_SIGNAL_ID:
                 gb_hazard_sig = !gb_hazard_sig;
-                if (gb_hazard_sig == true)
-                {
-                    // If the hazard signal is turned on, reset the turn signals
-                    output_low(LEFT_OUT_PIN);
-                    output_low(RIGHT_OUT_PIN);
-                }
+                // If the hazard signal is turned on, reset the turn signals
+                output_low(LEFT_OUT_PIN);
+                output_low(RIGHT_OUT_PIN);
                 break;
             case COMMAND_BPS_TRIP_SIGNAL_ID:
                 gb_bps_trip = true;
@@ -273,8 +255,8 @@ void check_switches_state(void)
         if (input_state(LEFT_IN_PIN) == 1)
         {
             b_left_switch = true;
-            gb_left_sig    = true;
-            gb_right_sig   = false; // Clear the right flag
+            gb_left_sig   = true;
+            gb_right_sig  = false; // Clear the right flag
         }
     }
     else if ((input_state(LEFT_IN_PIN) == 0) && (b_left_switch == true))
@@ -283,7 +265,7 @@ void check_switches_state(void)
         if (input_state(LEFT_IN_PIN) == 0)
         {
             b_left_switch = false;
-            gb_left_sig    = false;
+            gb_left_sig   = false;
         }
     }
     
@@ -294,8 +276,8 @@ void check_switches_state(void)
         if (input_state(RIGHT_IN_PIN) == 1)
         {
             b_right_switch = true;
-            gb_right_sig    = true;
-            gb_left_sig     = false; // Clear the left flag
+            gb_right_sig   = true;
+            gb_left_sig    = false; // Clear the left flag
         }
     }
     else if ((input_state(RIGHT_IN_PIN) == 0) && (b_right_switch == true))
@@ -304,7 +286,7 @@ void check_switches_state(void)
         if (input_state(RIGHT_IN_PIN) == 0)
         {
             b_right_switch = false;
-            gb_right_sig    = false;
+            gb_right_sig   = false;
         }
     }
     
@@ -315,7 +297,7 @@ void check_switches_state(void)
         if (input_state(HAZARD_IN_PIN) == 1)
         {
             b_hazard_switch = true;
-            gb_hazard_sig    = true;
+            gb_hazard_sig   = true;
         }
     }
     else if ((input_state(HAZARD_IN_PIN) == 0) && (b_hazard_switch == true))
@@ -324,7 +306,7 @@ void check_switches_state(void)
         if (input_state(HAZARD_IN_PIN) == 0)
         {
             b_hazard_switch = false;
-            gb_hazard_sig    = false;
+            gb_hazard_sig   = false;
         }
     }
     
